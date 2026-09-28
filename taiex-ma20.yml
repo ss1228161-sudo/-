@@ -1,0 +1,32 @@
+name: TAIEX MA20 Monitor
+
+on:
+  schedule:
+    # 台灣時間下午 1:40 執行（台股 13:30 收盤後留一點緩衝）
+    # UTC 時間 = 台灣時間 - 8 小時，所以這裡填 05:40 UTC
+    # 只在週一到週五執行（1-5），避開假日；遇到國定假日仍會空跑，
+    # 但腳本會用當時最新可取得的收盤資料判斷，不會出錯，只是可能重複判斷同一天。
+    - cron: '40 5 * * 1-5'
+  workflow_dispatch: {}   # 允許在 GitHub 網頁上手動點擊執行，方便測試
+
+jobs:
+  check-ma20:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run monitor script
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+        run: python monitor_taiex_ma20.py
